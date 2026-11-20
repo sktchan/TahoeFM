@@ -1,0 +1,7 @@
+# random encoder (T1): the pretraining architecture and init, untrained, ETF on the hvg panel; set ckpt=<pretrain run>/final or @<pretrain run name> (its token set must match)
+base = "base.toml"
+input = "etf"
+tokens = "panel"
+mode = "random"
+head_init = false
+init_seed = 0

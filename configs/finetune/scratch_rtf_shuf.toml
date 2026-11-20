@@ -1,0 +1,3 @@
+# later: rank control (rank_shuffle: each sample's top-k rank positions permuted, only set membership left)
+base = "scratch_rtf.toml"
+rank_shuffle = true

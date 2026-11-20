@@ -1,0 +1,7 @@
+# logistic regression on rank features, each sample's top-1024 genes ((K+1-r)/K over all 19020 genes) (primary)
+model = "rlog"
+level = "lvl2"
+genes = "topk"
+lr = 1.6e-3   # TBD: LincsFM sweep ir5xycw2 best (yx8bp89i); the Tahoe sweep bl_rlog_lvl2 sets it
+weight_decay = 1.1e-4   # TBD: LincsFM sweep ir5xycw2 best (yx8bp89i); the Tahoe sweep bl_rlog_lvl2 sets it
+max_steps = 300000    # TBD: LincsFM final length (300k); the Tahoe length check sets it

@@ -1,0 +1,36 @@
+# logistic baseline random search over lr and weight decay; filled in by scripts/sweep.jl; no early stopping (every trial runs max_steps)
+program: scripts/baseline.jl
+project: ${PROJECT}
+name: ${NAME}
+method: random
+metric:
+  name: best_val_acc
+  goal: maximize
+parameters:
+  wandb_project:
+    value: ${PROJECT}
+  level:
+    value: ${LEVEL}
+  save_model:
+    value: false
+  max_steps:
+    value: ${MAX_STEPS}
+  eval_every:
+    value: ${EVAL_EVERY}
+  lr:
+    distribution: log_uniform_values
+    min: 0.00001
+    max: 0.1
+  weight_decay:
+    distribution: log_uniform_values
+    min: 0.00001
+    max: 0.1
+${FIXED}
+run_cap: 20
+command:
+  - ${env}
+  - julia
+  - --threads=1,0
+  - ${program}
+  - ${CONFIG}
+  - ${args_no_hyphens}

@@ -1,0 +1,9 @@
+# lrecon: value hidden for 15% of tokens, EMA teacher, layer-averaged targets (topk: centred by a running per-gene mean), cosine loss; ETF on the hvg panel (primary arm)
+base = "base.toml"
+input = "etf"
+tokens = "panel"
+objective = "lrecon"
+lr = 0.0012   # TBD: LincsFM config value; the Tahoe pretrain lr grid (pt_lrecon_etf) sets it
+drop_prob = 0.11 # TBD: LincsFM config value, not tuned on Tahoe
+mask_ratio = 0.15
+ema_decay = 0.9995

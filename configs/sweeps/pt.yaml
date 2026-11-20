@@ -1,0 +1,25 @@
+# pretrain lr grid (config lr /3, x1, x3) at full pretraining length, best = the pretrain; filled in by scripts/sweep.jl
+program: scripts/pretrain.jl
+project: ${PROJECT}
+name: ${NAME}
+method: grid
+metric:
+  name: val
+  goal: minimize
+parameters:
+  wandb_project:
+    value: ${PROJECT}
+  max_steps:
+    value: ${MAX_STEPS}
+  eval_every:
+    value: 1000
+  lr:
+    values: ${LR_GRID}
+${FIXED}
+command:
+  - ${env}
+  - julia
+  - --threads=1,0
+  - ${program}
+  - ${CONFIG}
+  - ${args_no_hyphens}

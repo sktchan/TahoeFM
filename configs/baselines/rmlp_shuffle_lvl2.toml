@@ -1,0 +1,3 @@
+# later: rank control, graded values permuted inside each sample's top-k set
+base = "rmlp_lvl2.toml"
+rank_feat = "shuffle"

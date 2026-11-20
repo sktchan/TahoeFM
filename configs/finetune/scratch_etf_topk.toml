@@ -1,0 +1,5 @@
+# later: 2x2 gene set x encoding
+# scratch ETF on each sample's top-1024 genes by x / median (Geneformer) (2x2 cell); everything else as scratch_etf.toml
+base = "scratch_etf.toml"
+tokens = "topk"
+top_k = 1024

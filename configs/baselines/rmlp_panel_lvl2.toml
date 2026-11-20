@@ -1,0 +1,4 @@
+# later: 2x2 gene set x encoding
+# rank within the hvg panel / G (the LincsFM rank feature)
+base = "rmlp_lvl2.toml"
+genes = "panel"

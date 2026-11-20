@@ -1,0 +1,7 @@
+# later: 2x2 gene set x encoding
+# no pretraining (T0), RTF on the hvg panel; encoder init tok_norm as in erecon / lrecon pretraining
+base = "base.toml"
+input = "rtf"
+tokens = "panel"
+mode = "scratch"
+init = "tok_norm"

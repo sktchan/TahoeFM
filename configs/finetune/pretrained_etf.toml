@@ -1,0 +1,7 @@
+# pretrained encoder, ETF on the hvg panel; set ckpt=<pretrain run>/final or @<pretrain run name> (its token set must match)
+base = "base.toml"
+input = "etf"
+tokens = "panel"
+mode = "pretrained"
+head_init = false
+init_seed = 0

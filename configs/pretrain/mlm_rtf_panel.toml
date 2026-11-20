@@ -1,0 +1,4 @@
+# later: 2x2 gene set x encoding
+# mlm RTF on the panel token set (2x2 cell); everything else as mlm_rtf.toml
+base = "mlm_rtf.toml"
+tokens = "panel"

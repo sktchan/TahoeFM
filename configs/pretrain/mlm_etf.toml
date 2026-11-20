@@ -1,0 +1,8 @@
+# mlm: 15% of tokens hidden; ETF hides the value and predicts the token's rank, RTF hides the gene and predicts its id; ETF on the hvg panel (primary arm)
+base = "base.toml"
+input = "etf"
+tokens = "panel"
+objective = "mlm"
+lr = 0.012    # TBD: LincsFM config value; the Tahoe pretrain lr grid (pt_mlm_etf) sets it
+drop_prob = 0.013 # TBD: LincsFM config value, not tuned on Tahoe
+mask_ratio = 0.15

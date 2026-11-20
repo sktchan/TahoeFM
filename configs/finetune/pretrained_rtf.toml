@@ -1,0 +1,7 @@
+# pretrained encoder, RTF on the each sample's top-1024 genes by x / median (Geneformer); set ckpt=<pretrain run>/final or @<pretrain run name> (its token set must match)
+base = "base.toml"
+input = "rtf"
+tokens = "topk"
+mode = "pretrained"
+head_init = false
+init_seed = 0

@@ -1,0 +1,6 @@
+# no pretraining (T0), RTF on the each sample's top-1024 genes by x / median (Geneformer); encoder init tok_norm as in erecon / lrecon pretraining
+base = "base.toml"
+input = "rtf"
+tokens = "topk"
+mode = "scratch"
+init = "tok_norm"

@@ -1,0 +1,6 @@
+# shrinkage LDA on z-scored expression (clip +-10), shrinkage picked on val, hvg panel (primary)
+model = "elda"
+level = "lvl1"
+genes = "panel"
+standardize = true
+clip = 10

@@ -1,0 +1,264 @@
+-----------------------------------------------------------------------------------------------------------
+
+### nov 13 2026 ###
+
+-- notes:
+    -- only pb ported over so far
+    -- ETF vs RTF gene panel:
+        -- currently uses same HVGs across both
+        -- but top-k truncation is a constraint on ranked inputs only (geneformer)
+        -- thus we should test both technically, with the primary comparison being the geneformer version
+        -- also want to double-check is HVG done correctly, is this better than ? diff method of gene selection?
+        -- DONE: native comparison needs two tests for 2x2 of gene set x encoding
+            -- regular ETF x RTF is kept as is, but code also includes RTF x hvg and ETF x top-k
+        -- TESTING: diff HVG implementations
+    -- split:
+        -- by drug/dose group across all pre-training and fine-tuning levels?
+        -- is this really okay for lvl1, lvl2, and lvl3 tasks?
+        -- DONE: 10% drugs at all doses are held out of pre-training for lvl2, lvl3 held out tests
+    -- data import:
+        -- current a symlink, not sure if that's best tho
+        -- DONE: 
+    -- from LincsFM, is this needed:
+        -- tok-norm
+            -- TESTING: seeing if needed vs original version on scratch tfs, 20k steps
+        -- erecon/lrecon implementation
+            -- TESTING: 
+    -- check tahoeFM implementations publicly available
+        -- how do they do split, gene panels, pre-training tasks, token norm?
+        -- defos shouldn't be the same but note how they do it in case we have to make a certain decision
+            -- TESTING: no token normalization in these papers tho
+            -- but a per-gene z target is still about 91% cell line here, so it may again mostly learn cell line
+    -- attach to git: https://github.com/sktchan/TahoeFM.git
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 14 2026 ###
+
+-- notes:
+    -- only pb ported over so far
+    -- ETF vs RTF gene panel:
+        -- different HVG implementations:
+            -- old: top 1024 by variance of log values; chooses highly expressed genes that differ b/n cell lines
+            -- new: variance/mean, z-scored against genes of similar mean expression; top 1024
+            -- TBD: still need verification of this
+    -- split:
+        -- 1 dose of each drug is held-out for lvl2 (~16%)
+        -- there are two versions of lvl2:
+            -- since drug sits at the same well postiion on each of its dose plates, the position elaves a signature in the expression itself
+            -- the only thing that prevents this shortcut is where a drug sits at a different position, which exists on only plate #13 (27 drugs)
+                -- follows from literature (Huang 2026, Bai 2026)
+            -- thus, holding out dose doesn't necessarily escape it since the effect is tied to plate positon and repeats across plates
+            -- as such:
+                1. regular lvl2, additionally with an accuracy on only plate 13
+                2. position-free readout, mechanism-of-action class???
+                    -- TBD: lowkey idt we need this
+    -- data import:
+        -- current a symlink, not sure if that's best tho
+        -- TBD
+    -- from LincsFM, is this needed:
+        -- tok-norm
+            -- TESTING: seeing if needed vs original version on scratch tfs, 20k steps
+        -- erecon/lrecon implementation
+            -- TESTING: ???
+    -- check tahoeFM implementations publicly available
+        -- how do they do split, gene panels, pre-training tasks, token norm?
+        -- defos shouldn't be the same but note how they do it in case we have to make a certain decision
+            -- TESTING: no token normalization in these papers tho
+            -- but a per-gene z target is still about 91% cell line here, so it may again mostly learn cell line
+    -- attach to git: https://github.com/sktchan/TahoeFM.git
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 16 2026 ###
+
+-- notes:
+    -- only pb ported over so far:
+        -- NOTE: rest of the tests below are waiting on GPU; need to finish lincs stuff
+    -- ETF vs RTF gene panel:
+        -- different HVG implementations:
+            -- old: top 1024 by variance of log values; chooses highly expressed genes that differ b/n cell lines
+            -- new: variance/mean, z-scored against genes of similar mean expression; top 1024
+            -- TBD: still need verification of this
+    -- data import:
+        -- DONE: data moved to this codebase
+    -- from LincsFM, is this needed:
+        -- tok-norm
+            -- TESTING: seeing if needed vs original version on scratch tfs, 20k steps
+        -- erecon/lrecon implementation
+            -- TESTING: 
+                -- see if lrecon is ok as-is like lincs
+                -- see if theres an issue since gene set diff in lrecon rtf
+    -- push to git
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 18 2026 ###
+
+-- notes:
+    -- only pb ported over so far:
+        -- NOTE: rest of the tests below are waiting on GPU; need to finish lincs stuff
+    -- ETF vs RTF gene panel:
+        -- different HVG implementations:
+            -- old: top 1024 by variance of log values; chooses highly expressed genes that differ b/n cell lines
+            -- new: variance/mean, z-scored against genes of similar mean expression; top 1024
+            -- DONE: hvg updated to scanpy's seurat method
+    -- from LincsFM, is this needed:
+        -- tok-norm
+            -- DONE: seeing if needed vs original version on scratch tfs, lvl2, 20k steps
+                -- RTF default: 0.154; tok_norm: 0.086
+                -- ETF default: 0.06; tok-norm: 0.336
+            -- TESTING: RTF on fixed HVG vs. ETF on top-k vs. RTF rank shuffled
+        -- erecon/lrecon implementation
+            -- DONE: 
+                -- see if lrecon is ok as-is like lincs
+                -- see if theres an issue since gene set diff in lrecon rtf
+            -- erecon/lrecon ETF is same as LincsFM
+            -- but for RTF:
+                -- erecon:
+                    -- some genes are seen only a handful of times, so their z-scored targets reached very high values
+                    -- thus clipped at +/- 10
+                -- lrecon: 
+                    -- for lincs, we subtract the target by each gene's avg per gene position
+                    -- however, for tahoe the gene set is different
+                    -- thus it instead subtracts a running avg per gene, wherever that gene sits
+    -- push to git
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 19 2026 ###
+
+-- notes:
+    -- only pb ported over so far:
+        -- NOTE: rest of the tests below are waiting on GPU; need to finish lincs stuff
+    -- ETF vs RTF gene panel:
+        -- w/ same genes, etf and rtf are equal
+        -- but on (new) HVG both are terrible and on top-k both are good
+        -- likely would be best to do the headline: HVG ETF and top-k RTF then show in analyses the gene set differences (OR both top-k...)
+        -- TESTING: old HVG panel for ETF/RTF (because why is the new HVG so bad for ETF)
+        -- TESTING: top-k on raw expression (not median normalized) for ETF/RTF (matches State and CellFM)
+    -- from LincsFM, is this needed:
+        -- tok-norm (rescales starting gene/value embeddings)
+            -- needed in erecon/lrecon pre-training
+            -- TESTING: needed in scratch tf fine-tuning? (on both lincs and tahoe)
+        -- erecon/lrecon implementation
+            -- erecon:
+                -- clipping = RTF @ each hidden token, predicting the gene's z-score w/ clipping
+                -- ^this is needed; without then rare genes w/ low SD have high z-scores
+                -- TESTING: do we need to predict z score? vs just predicting raw expression (on both lincs and tahoe)
+            -- lrecon:
+                -- double = per-sample norm + per-gene norm
+                -- ^this is needed;  without per-sample then it collapses, without per-gene the target drifts to gene-posiion only
+    -- for lvl2:
+        -- since plate position can completely solve lvl2, options:
+            1. leave as-is but its not rly drug recognition
+            2. use plate 13 as the test set (where drugs are away from usual positions), but this is rly bad performance
+            3. change lvl2 target to MoA on held-out drugs (pred. same MoA class but holding out drug = none of its wells are seen in training)
+        -- leaning towards option 3; but would need cross-validation over drug folds
+            -- only 131 drugs belong to MoA class w/ >4 drugs
+            -- 17 classes; 4-10 drugs each; kinda noisy
+            -- would need more splits because so few drugs
+            -- highly dependent on label accuracy of metadata
+        -- let's leave as-is for now, use option 3 as a second test later
+    -- validation-based pick for sweeps:
+        -- for checkpt selection, best-validation checkpoint means picking the one that reads position best
+        -- going to leave as-is for now to match LINCS and final-step selection doesn't really change result for tfs (by ~0.02)
+    -- push to git
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+    -- lvl2 moa 5-fold split to combat plate shortcut
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 20 2026 ###
+
+-- notes:
+    -- only pb ported over so far:
+        -- NOTE: rest of the tests below are waiting on GPU; need to finish lincs stuff
+    -- ETF vs RTF gene panel:
+        -- DONE: old HVG panel for ETF/RTF (because why is the new HVG so bad for ETF)
+            -- did better prev. because hihgly expressed genes carry plate position signal
+        -- DONE: top-k on raw expression (not median normalized) for ETF/RTF (matches State and CellFM)
+            -- Geneformer top-k does about the same as raw; but Geneformer version is slightly better
+    -- from LincsFM, is this needed:
+        -- tok-norm (rescales starting gene/value embeddings)
+            -- needed in erecon/lrecon pre-training
+            -- DONE: needed in scratch tf fine-tuning? (on both lincs and tahoe)
+                -- yes even w/ final layernorm
+        -- erecon/lrecon implementation
+            -- erecon:
+                -- DONE: do we need to predict z score? vs just predicting raw expression (on both lincs and tahoe)
+                    -- yes; predicting raw expression does not work on RTF so having both do z score is best
+    -- push to git
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+    -- lvl2 moa 5-fold split to combat plate shortcut

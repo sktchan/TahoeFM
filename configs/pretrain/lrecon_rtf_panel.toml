@@ -1,0 +1,4 @@
+# later: 2x2 gene set x encoding
+# lrecon RTF on the panel token set (2x2 cell); everything else as lrecon_rtf.toml
+base = "lrecon_rtf.toml"
+tokens = "panel"

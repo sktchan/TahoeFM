@@ -1,0 +1,12 @@
+# constant-width relu MLP on z-scored expression (clip +-10), hvg panel (primary)
+model = "emlp"
+level = "lvl1"
+genes = "panel"
+standardize = true
+clip = 10
+lr = 7.4e-5   # TBD: LincsFM sweep 3r3k9660 best (cbo6px8c); the Tahoe sweep bl_emlp_z_lvl1 sets it
+drop_prob = 0.063    # TBD: LincsFM sweep 3r3k9660 best (cbo6px8c); the Tahoe sweep bl_emlp_z_lvl1 sets it
+n_layers = 1        # TBD: LincsFM sweep 3r3k9660 best (cbo6px8c); the Tahoe sweep bl_emlp_z_lvl1 sets it
+mlp_hidden_dim = 2048     # TBD: LincsFM sweep 3r3k9660 best (cbo6px8c); the Tahoe sweep bl_emlp_z_lvl1 sets it
+max_steps = 20000     # TBD: LincsFM final length (20k); the Tahoe length check sets it
+eval_every = 1000

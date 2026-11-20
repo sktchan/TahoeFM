@@ -1,0 +1,7 @@
+# shared by every finetune arm; lr / drop_prob / warmup / length are LincsFM protocol defaults, none tuned on Tahoe
+level = "lvl2"
+lr = 0.001               # TBD: LincsFM untuned default; the Tahoe ft sweeps (ft_<arm>_lvl2) set lvl2 values
+warmup_steps = 1000
+drop_prob = 0.1          # TBD: as lr
+max_steps = 20000        # TBD: LincsFM lvl1 final length; the Tahoe final lengths come from the length check
+micro_bs = 0

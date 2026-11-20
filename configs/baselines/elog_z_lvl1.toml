@@ -1,0 +1,10 @@
+# logistic regression on per-gene z-scored expression (clip +-10), hvg panel (primary)
+model = "elog"
+level = "lvl1"
+genes = "panel"
+standardize = true
+clip = 10
+lr = 3.6e-4   # TBD: LincsFM sweep odxtefp8 best (t9wm1t65); the Tahoe sweep bl_elog_z_lvl1 sets it
+weight_decay = 2.1e-4   # TBD: LincsFM sweep odxtefp8 best (t9wm1t65); the Tahoe sweep bl_elog_z_lvl1 sets it
+max_steps = 20000     # TBD: LincsFM final length (20k); the Tahoe length check sets it
+eval_every = 1000

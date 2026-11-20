@@ -1,0 +1,9 @@
+# constant-width relu MLP on rank features, each sample's top-1024 genes ((K+1-r)/K over all 19020 genes) (primary)
+model = "rmlp"
+level = "lvl2"
+genes = "topk"
+lr = 4.9e-5   # TBD: LincsFM sweep o6utlcen best (3d0dist0); the Tahoe sweep bl_rmlp_lvl2 sets it
+drop_prob = 0.22     # TBD: LincsFM sweep o6utlcen best (3d0dist0); the Tahoe sweep bl_rmlp_lvl2 sets it
+n_layers = 5        # TBD: LincsFM sweep o6utlcen best (3d0dist0); the Tahoe sweep bl_rmlp_lvl2 sets it
+mlp_hidden_dim = 16384    # TBD: LincsFM sweep o6utlcen best (3d0dist0); the Tahoe sweep bl_rmlp_lvl2 sets it
+max_steps = 300000    # TBD: LincsFM final length (300k); the Tahoe length check sets it

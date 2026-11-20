@@ -1,0 +1,3 @@
+# later: position control (pos_correct = true: project every column off the train plate-position means; "subtract" = the original per-(position, block) subtraction, see DECISIONS.md)
+base = "elog_z_lvl2.toml"
+pos_correct = true

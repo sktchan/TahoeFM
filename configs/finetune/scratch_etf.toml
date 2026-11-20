@@ -1,0 +1,7 @@
+# no pretraining (T0), ETF on the hvg panel; encoder init tok_norm as in erecon / lrecon pretraining
+base = "base.toml"
+input = "etf"
+tokens = "panel"
+mode = "scratch"
+init = "tok_norm"
+etf_scale = "raw"

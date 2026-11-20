@@ -1,0 +1,4 @@
+# later: 2x2 gene set x encoding
+# erecon RTF on the panel token set (2x2 cell); everything else as erecon_rtf.toml
+base = "erecon_rtf.toml"
+tokens = "panel"

@@ -1,0 +1,4 @@
+# shared by every pretrain arm
+max_steps = 40000        # TBD: LincsFM pretraining length; the Tahoe pretraining-length check sets it
+eval_every = 1000
+max_val_samples = 5000

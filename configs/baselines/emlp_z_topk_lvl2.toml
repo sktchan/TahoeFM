@@ -1,0 +1,4 @@
+# later: 2x2 gene set x encoding
+# expression z-scores of each sample's top-1024 genes (top-k values at their gene rows, 0 elsewhere, 19020 dims)
+base = "emlp_z_lvl2.toml"
+genes = "topk"

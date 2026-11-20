@@ -1,0 +1,4 @@
+# shrinkage LDA on rank features, shrinkage picked on val, each sample's top-1024 genes ((K+1-r)/K over all 19020 genes) (primary)
+model = "rlda"
+level = "lvl2"
+genes = "topk"

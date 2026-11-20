@@ -1,0 +1,3 @@
+# trivial label baselines (chance, majority, plate / cell line / (plate, dose) majority, (block, position) lookup), test, per dose and reloc
+trivial = true
+level = "lvl2"
