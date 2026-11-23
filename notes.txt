@@ -270,3 +270,45 @@
     -- mlps and logreg w/ same # parameters as tfs
     -- accuracy vs. depth curves for tsc
     -- lvl2 moa 5-fold split to combat plate shortcut
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 23 2026 ###
+
+-- overview:
+    -- pre-training RUNNING lr grid
+    -- fine-tuning 
+        -- trivial baselines DONE
+        -- log/mlp baselines RUNNING finals
+        -- no-pt tfs RUNNING sweeps
+        -- w-pt tfs TBD sweeps
+
+-- running:
+    -- pre-training
+        -- RUNNING lr grid, 40k steps
+    -- fine-tuning
+        -- learning curves:
+            -- DONE pre-trains; 40k steps is enough
+            -- RUNNING no-pt tfs; 300k steps
+        -- baselines:
+            -- DONE mlp sweeps; emlp=0.6; rmlp=0.67
+            -- RUNNING lvl2 finals
+        -- no-pt tfs:
+            -- RUNNING sweeps; lvl2 20 trials each, 40k steps
+
+-- notes:
+    -- only pb ported over so far:
+        -- NOTE: rest of the tests below are waiting on GPU; need to finish lincs stuff
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+    -- lvl2 moa 5-fold split to combat plate shortcut

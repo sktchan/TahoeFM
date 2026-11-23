@@ -9,7 +9,7 @@ const DEFAULTS = Dict{String,Any}(
     # dataset = sc: raw files read in place, the cell index (scripts/prepare_cells.jl), the in-memory cell sample (shards per plate, cells per split side),
     # and the training stream over every train cell (shards per plate and cells per pool; sc_stream = false trains on the in-memory train cells)
     "raw_dir" => RAW_DIR, "sc_path" => joinpath(PKG_DIR, "data", "tahoe_sc.jld2"), "sc_shards" => 2, "sc_train_cells" => 50000, "sc_val_cells" => 20000,
-    "sc_test_cells" => 100000, "sc_reloc_cells" => 20000, "sc_stream" => true, "sc_pool_shards" => 1, "sc_pool_cells" => 50000)
+    "sc_test_cells" => 100000, "sc_reloc_cells" => 20000, "sc_stream" => true, "sc_pool_shards" => 3, "sc_pool_cells" => 30000)
 
 # toml file merged over its base = "<file>" (path relative to the file), if set
 function read_toml(path::AbstractString)

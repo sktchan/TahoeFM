@@ -2,6 +2,6 @@
 model = "rlog"
 level = "lvl2"
 genes = "topk"
-lr = 1.6e-3   # TBD: LincsFM sweep ir5xycw2 best (yx8bp89i); the Tahoe sweep bl_rlog_lvl2 sets it
-weight_decay = 1.1e-4   # TBD: LincsFM sweep ir5xycw2 best (yx8bp89i); the Tahoe sweep bl_rlog_lvl2 sets it
+lr = 2.3e-4   # Tahoe sweep iibrwijf best (z44x33ax)
+weight_decay = 1.3e-2   # Tahoe sweep iibrwijf best (z44x33ax)
 max_steps = 300000    # TBD: LincsFM final length (300k); the Tahoe length check sets it

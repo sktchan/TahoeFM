@@ -31,6 +31,7 @@ function baseline_inputs(d::TahoeData, idx, sp, model::AbstractString, cfg::Dict
     genes in ("panel", "all", "topk") || error("genes must be panel, all or topk, got $genes")
     (genes == "all") == is_all(d) || error("baseline genes = $genes but the data holds $(is_all(d) ? "all genes" : "a panel")")
     model[1] == 'e' && rf != "graded" && error("expression baselines take no rank_feat")
+    is_sc(d) && return cell_baseline_inputs(d, idx, sp, model, cfg)
     aux = (;)
     if model[1] == 'r' && genes == "topk"
         K = Int(get(cfg, "top_k", 1024))
@@ -76,6 +77,18 @@ function stream_features(d::TahoeData, model::AbstractString, cfg::Dict, raw, au
     end
     model[1] == 'r' && return rank_control(rank_features(gene_ranks(raw, d.medians), raw), raw, 1:size(raw, 2), rf)
     return z ? cl((raw .- d.gene_mean) ./ d.gene_sd) : raw
+end
+
+# single cells: the same features built split by split (one dense matrix per split, no copy of all cells); top-k values are standardised with the train split's mean / sd
+function cell_baseline_inputs(d::TahoeData, idx, sp, model::AbstractString, cfg::Dict)
+    c = merge(cfg, Dict("tokens" => baseline_genes(cfg) == "topk" ? "topk" : "panel", "input" => baseline_input_name(model), "rank_shuffle" => false))
+    raw(v) = raw_input(d, idx[v], c); aux = (;)
+    if baseline_genes(cfg) == "topk" && model[1] == 'e' && _flag(get(cfg, "standardize", false))
+        Xt = stream_features(d, model, merge(cfg, Dict("standardize" => false)), raw(sp.train), aux)
+        mu = vec(mean(Xt, dims=2)); sd = vec(std(Xt, dims=2)); sd[sd .== 0] .= 1f0; aux = (mu = mu, sd = sd); Xt = nothing
+    end
+    f(v) = stream_features(d, model, cfg, raw(v), aux)
+    return f(sp.train), f(sp.val), f(sp.test), f(sp.reloc), "$(baseline_genes(cfg)) features of $(model[1] == 'r' ? "ranks" : "expression"), built per split", aux
 end
 
 # train one logistic / MLP baseline with the finetune() loop conventions (train/classify.jl)

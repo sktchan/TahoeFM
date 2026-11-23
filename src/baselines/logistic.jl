@@ -71,8 +71,8 @@ function lda_baseline(cfg::Dict; data::Union{Nothing,TahoeData} = nothing)
     prl = isempty(sp.reloc) ? Int[] : Flux.onecold(lda_scores(W, b, Xrl))
     xc, xk = eval_extras(d, idx, sp, y, p, p, prl, prl)
     if is_sc(d)   # per pseudobulk: the class with the highest mean log-probability over its test cells
-        g = pb_groups(d, idx[sp.test]); P = logsoftmax(lda_scores(W, b, Xte); dims=1); S = zeros(Float64, C, maximum(g)); for (j, k) in enumerate(g); k > 0 && (S[:, k] .+= view(P, :, j)); end
-        gp = Int[argmax(view(S, :, k)) for k in axes(S, 2)]; pc, pk = pb_extras(d, idx, sp, y, gp, gp); xc = merge(xc, pc); xk = merge(xk, pk)
+        g = pb_groups(d, idx[sp.test]); P = logsoftmax(lda_scores(W, b, Xte); dims=1); Sg = zeros(Float64, C, isempty(g) ? 0 : maximum(g)); for (j, k) in enumerate(g); k > 0 && (Sg[:, k] .+= view(P, :, j)); end
+        gp = Int[argmax(view(Sg, :, k)) for k in axes(Sg, 2)]; pc, pk = pb_extras(d, idx, sp, y, gp, gp); xc = merge(xc, pc); xk = merge(xk, pk)
     end
     wall = time() - t0
     jldsave(joinpath(dir, "model.jld2"); W=W, b=b, shrinkage=best.a, config=cfg)

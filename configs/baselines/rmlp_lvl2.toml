@@ -2,8 +2,9 @@
 model = "rmlp"
 level = "lvl2"
 genes = "topk"
-lr = 4.9e-5   # TBD: LincsFM sweep o6utlcen best (3d0dist0); the Tahoe sweep bl_rmlp_lvl2 sets it
-drop_prob = 0.22     # TBD: LincsFM sweep o6utlcen best (3d0dist0); the Tahoe sweep bl_rmlp_lvl2 sets it
-n_layers = 5        # TBD: LincsFM sweep o6utlcen best (3d0dist0); the Tahoe sweep bl_rmlp_lvl2 sets it
-mlp_hidden_dim = 16384    # TBD: LincsFM sweep o6utlcen best (3d0dist0); the Tahoe sweep bl_rmlp_lvl2 sets it
+lr = 2.8e-5   # Tahoe sweep ib277ipd best (g8jcdacf); kept over the 150k sweep, author Nov 23
+drop_prob = 0.42   # Tahoe sweep ib277ipd best (g8jcdacf); kept over the 150k sweep, author Nov 23
+weight_decay = 3.8e-3   # Tahoe sweep ib277ipd best (g8jcdacf); kept over the 150k sweep, author Nov 23
+n_layers = 1   # Tahoe sweep ib277ipd best (g8jcdacf); kept over the 150k sweep, author Nov 23
+mlp_hidden_dim = 2048   # Tahoe sweep ib277ipd best (g8jcdacf); kept over the 150k sweep, author Nov 23
 max_steps = 300000    # TBD: LincsFM final length (300k); the Tahoe length check sets it
