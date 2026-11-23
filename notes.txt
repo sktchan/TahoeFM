@@ -231,24 +231,32 @@
 
 ### nov 20 2026 ###
 
+-- overview:
+    -- pre-training RUNNING lr grid
+    -- fine-tuning 
+        -- trivial baselines DONE
+        -- log/mlp baselines RUNNING sweeps
+        -- no-pt tfs RUNNING sweeps
+        -- w-pt tfs TBD sweeps
+
+-- running:
+    -- pre-training
+        -- RUNNING lr grid, 40k steps
+    -- fine-tuning
+        -- learning curves:
+            -- DONE logreg: 300k, mlp: 150-200k
+            -- RUNNING no-pt tfs; 300k steps
+            -- PENDING pre-trains; 80k steps at best lr grid
+        -- baselines:
+            -- DONE trivial; 0.7 already for LDA??
+            -- DONE logreg sweeps; 0.6ish for exp and rank
+            -- RUNNING mlp sweeps; lvl2 20 trials each, 150k steps
+        -- no-pt tfs:
+            -- PENDING sweeps; lvl2 20 trials each, 40k steps
+
 -- notes:
     -- only pb ported over so far:
         -- NOTE: rest of the tests below are waiting on GPU; need to finish lincs stuff
-    -- ETF vs RTF gene panel:
-        -- DONE: old HVG panel for ETF/RTF (because why is the new HVG so bad for ETF)
-            -- did better prev. because hihgly expressed genes carry plate position signal
-        -- DONE: top-k on raw expression (not median normalized) for ETF/RTF (matches State and CellFM)
-            -- Geneformer top-k does about the same as raw; but Geneformer version is slightly better
-    -- from LincsFM, is this needed:
-        -- tok-norm (rescales starting gene/value embeddings)
-            -- needed in erecon/lrecon pre-training
-            -- DONE: needed in scratch tf fine-tuning? (on both lincs and tahoe)
-                -- yes even w/ final layernorm
-        -- erecon/lrecon implementation
-            -- erecon:
-                -- DONE: do we need to predict z score? vs just predicting raw expression (on both lincs and tahoe)
-                    -- yes; predicting raw expression does not work on RTF so having both do z score is best
-    -- push to git
 
 -- on hold:
     -- label efficiency curves
