@@ -37,7 +37,7 @@ end
 # lr_scale!(s) sets every lr to s x its base value; with it, cfg warmup_steps gives a linear warmup then a constant lr
 # extra = named (X, y) evaluation sets (e.g. reloc), predicted with the final and the best-val model next to test
 # feed(bs) -> (model input, class ids) replaces the in-memory train batches (single cells: the stream over every train cell); groups = pseudobulk id per test column
-function train_classifier!(model, opt, grad, data, cfg::Dict, C::Int; lr_scale! = nothing, extra::NamedTuple = (;), feed = nothing, groups = nothing)
+function train_classifier!(model, opt, grad, data, cfg::Dict, C::Int; lr_scale! = nothing, extra::NamedTuple = (;), feed = nothing, groups = nothing, val_groups = nothing)
     Xtr, ytr, Xva, yva, Xte, yte = data
     bs = cfg["batch_size"]; total = cfg["max_steps"]; balanced = get(cfg, "balanced", cfg["level"] == "lvl2") == true
     sel = get(cfg, "select", "val"); sel in ("val", "final") || error("select must be val or final, got $sel")
@@ -63,10 +63,12 @@ function train_classifier!(model, opt, grad, data, cfg::Dict, C::Int; lr_scale! 
         push!(losses, l); step += 1
         wu > 0 && step < wu && lr_scale!((step + 1) / wu)
         (step % eval_every == 0 || step == total) || continue
-        vl, va, _ = evaluate_classifier(model, Xva, yva, C, bs)
+        vl, va, _, ve = evaluate_classifier(model, Xva, yva, C, bs; groups = val_groups)
         ep = step / bpe
-        push!(curve, (step = step, epoch = ep, train = mean(losses), val_loss = vl, val_acc = va))
-        @printf("step %d (epoch %.2f) train %.4f val %.4f val_acc %.4f | %.0f s\n", step, ep, mean(losses), vl, va, time() - t0); flush(stdout)
+        # single cells: val accuracy at the pseudobulk unit, logged only (selection stays on val_acc)
+        vpb = isnothing(val_groups) ? (;) : (val_acc_pb = group_acc(ve.group_pred, val_groups, yva),)
+        push!(curve, merge((step = step, epoch = ep, train = mean(losses), val_loss = vl, val_acc = va), vpb))
+        @printf("step %d (epoch %.2f) train %.4f val %.4f val_acc %.4f%s | %.0f s\n", step, ep, mean(losses), vl, va, isempty(vpb) ? "" : @sprintf(" val_acc_pb %.4f", vpb.val_acc_pb), time() - t0); flush(stdout)
         log_wandb(cfg, Dict("step" => step, "epoch" => ep, "train_loss" => mean(losses), "val_loss" => vl, "val_acc" => va, "best_val_acc" => max(best.acc, va)))
         losses = Float64[]
         if va > best.acc || (va == best.acc && vl < best.loss)
@@ -112,6 +114,13 @@ function lookup_val_acc(d, idx, sp, y, level)
     pv, _ = key_majority(ytr, ps[sp.train], ps[sp.val])
     p, _ = key_majority(ytr, bp[sp.train], bp[sp.val]; fallback = pv)
     return mean(p .== y[sp.val])
+end
+
+# accuracy of group predictions gp (group ids g per column, 0 = none) against the column labels y
+function group_acc(gp, g, y)
+    (isnothing(gp) || isempty(gp)) && return NaN
+    yg = zeros(Int, length(gp)); for (j, k) in enumerate(g); k > 0 && (yg[k] = y[j]); end
+    return mean(gp .== yg)
 end
 
 # single cells: accuracy at the pseudobulk unit (the class with the highest mean log-probability over the test cells of a (well, cell line) that is a pseudobulk of the table), and what predstrues.jld2 keeps

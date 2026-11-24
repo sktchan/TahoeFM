@@ -38,9 +38,13 @@ pick = shuffle(MersenneTwister(seed), collect(1:length(ix.shards)))[1:min(n_stat
 st = M.cell_stats(raw_dir, ix, tokrow, G, side .== 1, sort(pick))
 sd = copy(st.sd); n0 = count(==(0f0), sd); sd[sd .== 0] .= 1f0
 println("train statistics ($(el()) s): $(st.n_train) train cells of $(st.n_all) in $(length(pick)) shards | genes never detected in a train cell $(count(==(0f0), st.det)) (median 1), sd 0: $n0 (sd 1)")
-# panel = the old compute_hvg.jl rule: the n_hvg genes with the highest variance of log1p CP10k over cells (here: train cells only); pb = the pseudobulk file's hvg panel, for reference
-hvg = sort(sortperm(st.var; rev=true)[1:n_hvg]); panels = (hvg = hvg, pb = pb_panels.hvg)
-println("  panel hvg: top $n_hvg variance genes, variance $(round(maximum(st.var[hvg]), digits=4)) to $(round(minimum(st.var[hvg]), digits=4)) | detection of the panel genes: median $(round(median(st.det[hvg]), digits=3)), min $(round(minimum(st.det[hvg]), digits=4)) | shared with the pseudobulk hvg panel: $(length(intersect(hvg, pb_panels.hvg)))")
+# panels: hvg = the pseudobulk file's hvg genes (the same expression genes on both datasets); var = the old compute_hvg.jl rule, the n_hvg genes with the highest variance of log1p CP10k over train cells;
+# seurat / seurat_v3 = scanpy highly_variable_genes on the train cells (src/data/cells.jl cell_hvg)
+hvg = sort(sortperm(st.var; rev=true)[1:n_hvg]); hc = M.cell_hvg(raw_dir, ix, tokrow, G, side .== 1, sort(pick), n_hvg)
+panels = (hvg = pb_panels.hvg, var = hvg, seurat = hc.seurat, seurat_v3 = hc.seurat_v3)
+for k in (:seurat, :seurat_v3); println("  panel $k (scanpy highly_variable_genes flavor $k on train cells): detection over train cells median $(round(median(st.det[panels[k]]), digits=3)), shared with the pseudobulk hvg $(length(intersect(panels[k], pb_panels.hvg)))"); end
+println("  panel hvg = the pseudobulk hvg genes: detection over train cells median $(round(median(st.det[pb_panels.hvg]), digits=3)), min $(round(minimum(st.det[pb_panels.hvg]), digits=4))")
+println("  panel var: top $n_hvg variance genes, variance $(round(maximum(st.var[hvg]), digits=4)) to $(round(minimum(st.var[hvg]), digits=4)) | detection of the panel genes: median $(round(median(st.det[hvg]), digits=3)), min $(round(minimum(st.det[hvg]), digits=4)) | shared with the pseudobulk hvg panel: $(length(intersect(hvg, pb_panels.hvg)))")
 
 # against the old single-cell files, when present (read only)
 old_med = joinpath(raw_dir, "sc_gene_medians.jld2"); old_hvg = joinpath(dirname(raw_dir), "hvg_indices.jld2")

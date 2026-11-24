@@ -18,6 +18,7 @@ _blocks(e::Encoder) = vcat([("value", e.value), ("gene", e.gene)], [("L$i", l) f
 # plus the share of rank-position means (ranks by x / median, the old RTF position axis); topk: ids = token genes, the gene share then uses per-gene counts
 # (unbalanced: genes appear in different numbers of samples, so the split is approximate) and ranks are the token slots
 function state_stats(enc::Encoder, Xin, R::AbstractMatrix{<:Integer}; bs::Int = 50, ids = nothing)
+    isnothing(pad_len(Xin)) || return state_stats_padded(enc, Xin, R; bs, ids)
     m = eval_device(enc); D = embed_dim(enc); T, N = size(Xin); nG = isnothing(ids) ? T : n_genes(enc)
     A = zeros(Float64, D, N); Pg = zeros(Float64, D, nG); cg = zeros(Float64, nG); Pr = zeros(Float64, D, T); s1 = zeros(Float64, D); s2 = zeros(Float64, D)
     for s in 1:bs:N
@@ -42,6 +43,27 @@ function state_stats(enc::Encoder, Xin, R::AbstractMatrix{<:Integer}; bs::Int = 
             var_tokxsmp = sum(ssr) / (D * T * N))
 end
 
+# the same decomposition over the real tokens of padded inputs (single cells): per-sample, per-gene and per-slot means weighted by their real-token counts
+function state_stats_padded(enc::Encoder, Xin, R::AbstractMatrix{<:Integer}; bs::Int = 50, ids = nothing)
+    m = eval_device(enc); D = embed_dim(enc); T, N = size(Xin); nG = n_genes(enc); len = Xin.len
+    A = zeros(Float64, D, N); Pg = zeros(Float64, D, nG); cg = zeros(Float64, nG); Pr = zeros(Float64, D, T); cr = zeros(Float64, T); s1 = zeros(Float64, D); s2 = zeros(Float64, D)
+    for s in 1:bs:N
+        b = s:min(s + bs - 1, N)
+        h = Float64.(Array(token_states(m, dev(Xin[:, b]))[end]))
+        for (jj, j) in enumerate(b)
+            L = Int(len[j]); hj = view(h, :, 1:L, jj)
+            A[:, j] .= vec(mean(hj, dims=2)); s1 .+= vec(sum(hj, dims=2)); s2 .+= vec(sum(hj .^ 2, dims=2))
+            for t in 1:L; Pg[:, ids[t, j]] .+= hj[:, t]; cg[ids[t, j]] += 1; Pr[:, R[t, j]] .+= hj[:, t]; cr[R[t, j]] += 1; end
+        end
+    end
+    n = sum(Float64, len); mu = s1 ./ n
+    sst = s2 .- n .* mu .^ 2; ssa = vec(sum(Float64.(len)' .* (A .- mu) .^ 2, dims=2))
+    wsum(P, c) = (k = c .> 0; vec(sum(c[k]' .* (P[:, k] ./ c[k]' .- mu) .^ 2, dims=2)))
+    ssb = wsum(Pg, cg); ssc = wsum(Pr, cr); ssr = sst .- ssa .- ssb; tot = sum(sst)
+    return (pool_sd = median(vec(std(A, dims=2))), tok_sd = median(sqrt.(max.(sst, 0) ./ (n - 1))), frac_sample = sum(ssa) / tot,
+            frac_gene = sum(ssb) / tot, frac_rank = sum(ssc) / tot, frac_tokxsmp = sum(ssr) / tot, var_tot = tot / (D * n), var_tokxsmp = sum(ssr) / (D * n))
+end
+
 # lrecon: cosine loss of two no-context lookups of the teacher targets (trivial 1.0): the mean target per gene id and per token slot, fit on the first half
 # of the columns of Xin and scored on the second half (batches of 100 as pretraining); gc = gene centre for topk tokens (panel: nothing, slot = gene); tgt(enc, x) = the targets
 _cosd(a, b) = (s = 0.0; na = 0.0; nb = 0.0; @inbounds for i in eachindex(a, b); s += a[i] * b[i]; na += a[i]^2; nb += b[i]^2; end; s / (sqrt(na) * sqrt(nb) + 1e-6))
@@ -50,15 +72,17 @@ function lrecon_lookups(enc::Encoder, Xin, gc; bs::Int = 100, tgt = (e, x) -> is
     nG = topk ? n_genes(enc) : T
     tg(c) = Array(tgt(m, dev(Xin[:, c])))
     gid(c) = topk ? Int.(Xin.ids[:, c]) : repeat(1:T, 1, length(c))
+    nreal(c, j) = isnothing(pad_len(Xin)) ? T : Int(Xin.len[c[j]])   # padded inputs: real slots only
     Sg = zeros(Float64, D, nG); cg = zeros(Int, nG); Ss = zeros(Float64, D, T)
     for c in Iterators.partition(1:h, bs)
         Y = tg(c); g = gid(c)
-        for j in axes(Y, 3), t in 1:T; Sg[:, g[t, j]] .+= view(Y, :, t, j); cg[g[t, j]] += 1; Ss[:, t] .+= view(Y, :, t, j); end
+        for j in axes(Y, 3), t in 1:nreal(c, j); Sg[:, g[t, j]] .+= view(Y, :, t, j); cg[g[t, j]] += 1; Ss[:, t] .+= view(Y, :, t, j); end
     end
-    Mg = Sg ./ max.(cg', 1); Ms = Ss ./ h; lg = 0.0; ls = 0.0; n = 0
+    cs = zeros(Int, T); for c in Iterators.partition(1:h, bs), j in eachindex(c); cs[1:nreal(c, j)] .+= 1; end
+    Mg = Sg ./ max.(cg', 1); Ms = Ss ./ max.(cs', 1); lg = 0.0; ls = 0.0; n = 0
     for c in Iterators.partition(h+1:N, bs)
         Y = tg(c); g = gid(c)
-        for j in axes(Y, 3), t in 1:T
+        for j in axes(Y, 3), t in 1:nreal(c, j)
             y = view(Y, :, t, j); k = g[t, j]
             lg += cg[k] > 0 ? 1 - _cosd(view(Mg, :, k), y) : 1.0; ls += 1 - _cosd(view(Ms, :, t), y); n += 1
         end
@@ -79,7 +103,6 @@ function pretext_from_log(ck::AbstractString, ex::Dict)
 end
 
 function run_health(cfg::Dict; data::Union{Nothing,TahoeData} = nothing)
-    get(cfg, "dataset", "pb") == "pb" || error("the health check is not ported to dataset = $(cfg["dataset"]) yet")
     t_start = time()
     ck = String(rstrip(string(cfg["ckpt"]), '/')); name = string(get(cfg, "name", join(splitpath(ck)[end-2:end], "/")))
     nh = get(cfg, "nh", 5000); bs = get(cfg, "probe_bs", 50)

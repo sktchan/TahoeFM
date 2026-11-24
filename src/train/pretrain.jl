@@ -144,9 +144,9 @@ end
 
 # frozen lvl2 / moa probe and health check of a finished pretrain checkpoint (cfg probe / health = false skips); failures only warn
 function post_eval(cfg::Dict, ck::AbstractString, name::AbstractString, d::TahoeData)
-    is_sc(d) && return println("probe and health check are not ported to single cells yet: skipped")
     for (key, f) in (("probe", run_probe), ("health", run_health))
         get(cfg, key, true) || continue
+        key == "probe" && is_sc(d) && (println("probe is not ported to single cells: skipped"); continue)
         try
             row = f(merge(cfg, Dict{String,Any}("ckpt" => ck, "name" => name)); data=d)
             key == "probe" && log_wandb(cfg, Dict("probe_drug_h2" => row.drug_h2_test, "probe_drug_clc_h2" => row.drug_clc_h2_test, "probe_cell_h2" => row.cell_h2_test,

@@ -35,6 +35,13 @@ end
 
 lda_scores(W, b, X) = W' * X .+ b
 
+# within-class whitening x -> D^-1/2 V' x (V, D = eigen of the shrinkage-a pooled within-class covariance on train): LDA's metric for the SGD baselines
+function lda_whiten(Xtr, ytr, C::Integer, a::Float64, Xs)
+    _, S, _ = lda_stats(Xtr, ytr, C); E = eigen(Symmetric(S)); nu = mean(E.values)
+    T = Float32.(Diagonal(1 ./ sqrt.(max.((1 - a) .* E.values .+ a * nu, 1e-12))) * E.vectors')
+    return map(X -> T * X, Xs), @sprintf(", whitened (within-class covariance, shrinkage %g)", a)
+end
+
 # shrinkage LDA: fit on train, shrinkage chosen on val accuracy (ties -> lower val loss), test reported
 function lda_baseline(cfg::Dict; data::Union{Nothing,TahoeData} = nothing)
     model = cfg["model"]; level = cfg["level"]; seed = get(cfg, "seed", 1)

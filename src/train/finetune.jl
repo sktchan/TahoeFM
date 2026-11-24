@@ -60,7 +60,8 @@ function finetune(cfg::Dict; data::Union{Nothing,TahoeData} = nothing)
     stream = cell_stream(d, cfg; level, seed = seed + 3000, balanced = get(cfg, "balanced", level == "lvl2") == true)
     feed = isnothing(stream) ? nothing : bs -> ((X, yb) = next_batch!(stream, bs); (model_input(input, X, d, cfg), yb))
     r = train_classifier!(model, opt, (m, x, t) -> _ft_grad(m, x, t, micro), (Xtr, ytr, Xva, yva, Xte, yte), cfg, C; lr_scale!,
-                          extra = (reloc = (Xrl, y[sp.reloc]),), feed, groups = is_sc(d) ? pb_groups(d, idx[sp.test]) : nothing)
+                          extra = (reloc = (Xrl, y[sp.reloc]),), feed, groups = is_sc(d) ? pb_groups(d, idx[sp.test]) : nothing,
+                          val_groups = is_sc(d) ? pb_groups(d, idx[sp.val]) : nothing)
     # finetuned encoders as checkpoints that load_encoder and the probe read (<dir>/final, <dir>/best); init keys from the encoder's own init
     if get(cfg, "save_model", true)
         ex = Dict{String,Any}("n_genes" => nid, "n_ranks" => G, "tokens" => cfg["tokens"], "init_scheme" => string(pex["init_scheme"]), "x_mean" => pex["x_mean"],

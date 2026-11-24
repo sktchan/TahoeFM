@@ -14,10 +14,10 @@ baseline_genes(cfg::Dict) = get(cfg, "genes", primary_tokens(baseline_input_name
 # name suffix of the position control: _posproj (project, the default) or _pos (subtract, the original rows)
 pos_suffix(cfg::Dict) = (pm = pos_method(get(cfg, "pos_correct", false)); isnothing(pm) ? "" : pm == "subtract" ? "_pos" : "_posproj")
 
-# name: model, _z, then the gene set (topkraw for topk_rule = raw) / rank control / position correction when not the primary setting, then the level
+# name: model, _z, then the gene set (topkraw for topk_rule = raw) / rank control / position correction when not the primary setting, _wh when whitened, then the level
 function baseline_name(cfg::Dict)
     m = cfg["model"]; g = baseline_genes(cfg); rf = get(cfg, "rank_feat", "graded"); raw = g == "topk" && topk_rule(cfg) == "raw"
-    s = (g == primary_tokens(baseline_input_name(m)) && !raw ? "" : "_$g" * (raw ? "raw" : "")) * (rf == "graded" ? "" : "_$rf") * pos_suffix(cfg)
+    s = (g == primary_tokens(baseline_input_name(m)) && !raw ? "" : "_$g" * (raw ? "raw" : "")) * (rf == "graded" ? "" : "_$rf") * pos_suffix(cfg) * (haskey(cfg, "whiten") ? "_wh" : "")
     return "$(m)$(m[1] == 'e' && _flag(get(cfg, "standardize", false)) ? "_z" : "")$(s)_$(cfg["level"])"
 end
 
@@ -107,6 +107,10 @@ function baseline(cfg::Dict; data::Union{Nothing,TahoeData} = nothing)
     sp = finetune_split(d, idx)
     C = length(names)
     Xtr, Xva, Xte, Xrl, info, aux = baseline_inputs(d, idx, sp, model_name, cfg)
+    if haskey(cfg, "whiten")
+        is_sc(d) && error("whiten is pseudobulk only")
+        (Xtr, Xva, Xte, Xrl), wi = lda_whiten(Xtr, y[sp.train], C, Float64(cfg["whiten"]), (Xtr, Xva, Xte, Xrl)); info *= wi
+    end
     G = size(Xtr, 1)
     ytr, yva, yte = y[sp.train], y[sp.val], y[sp.test]
 

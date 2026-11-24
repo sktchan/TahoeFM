@@ -279,7 +279,7 @@
     -- pre-training RUNNING lr grid
     -- fine-tuning 
         -- trivial baselines DONE
-        -- log/mlp baselines RUNNING finals
+        -- log/mlp baselines DONE finals
         -- no-pt tfs RUNNING sweeps
         -- w-pt tfs TBD sweeps
 
@@ -292,13 +292,31 @@
             -- RUNNING no-pt tfs; 300k steps
         -- baselines:
             -- DONE mlp sweeps; emlp=0.6; rmlp=0.67
-            -- RUNNING lvl2 finals
+            -- DONE lvl2 finals; rmlp > emlp > elog > rlog but elda >>>??
+                -- why is elda so good?
+                    -- drug signal is small, cell line signal is huge;
+                    -- lda uses whitening: works on directions (combinations of genes), divides by noise after removing drug means, then taking correlated genes into account
+                    -- in contrast, z-scoring works on each gene separately, divides by the gene's total spread (drug effect included), and ignores correlated genes
+                    -- honestly can probably ignore this; don't particularly need LDA as a baseline
+                -- DONE emlp on raw inputs instead of z score just to check
+                    -- this is worse
         -- no-pt tfs:
             -- RUNNING sweeps; lvl2 20 trials each, 40k steps
 
 -- notes:
     -- only pb ported over so far:
         -- NOTE: rest of the tests below are waiting on GPU; need to finish lincs stuff
+    -- pre much done porting over sc:
+        -- issues:
+            -- test units diff from pb
+                -- TESTING rn
+            -- model selection unit diff from pb
+                -- TESTING rn
+            -- hvg not seruat as in pb
+            -- lvl1 has diff # classes (+2)
+            -- no paired boostrap test for the interation
+            -- probe/health check? double check erecon and lrecon works fine (RUNNING)
+        -- next to run is hyperparam sweeps + pretrain
 
 -- on hold:
     -- label efficiency curves
@@ -311,4 +329,51 @@
     -- paired boostrapping
     -- mlps and logreg w/ same # parameters as tfs
     -- accuracy vs. depth curves for tsc
+    -- lvl2 moa 5-fold split to combat plate shortcut
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 24 2026 ###
+
+-- pb overview:
+    -- pre-training RUNNING lr grid
+    -- fine-tuning 
+        -- trivial baselines DONE
+        -- log/mlp baselines DONE finals
+        -- no-pt tfs RUNNING sweeps
+        -- w-pt tfs TBD sweeps
+
+-- running:
+    -- pre-training
+        -- RUNNING mlm ETF and erecon ETF; to see if 40k is enough or 80k needed
+    -- fine-tuning
+        -- learning curves:
+            -- DONE no-pt tfs; 300k steps is good
+        -- baselines:
+            -- DONE all lvl2
+            -- TBD lvl1
+        -- no-pt tfs:
+            -- DONE sweeps; lvl2 20 trials each, 40k steps; RTF top-k >>> ETF hvg
+            -- RUNNING finals; ETA thursday ish
+        -- w-pt tfs:
+            -- 
+
+-- next:
+    -- lvl1 baselines (prolly no sweep needed)
+    -- top-k acc
+    -- same mlp parameters
+
+-- notes:
+    -- 
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
     -- lvl2 moa 5-fold split to combat plate shortcut

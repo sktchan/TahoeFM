@@ -1,0 +1,66 @@
+-----------------------------------------------------------------------------------------------------------
+
+### nov 24 2026 ###
+
+-- overview:
+    -- pre-training TBD
+    -- fine-tuning 
+        -- trivial baselines TBD
+        -- log/mlp baselines TBD 
+        -- no-pt tfs TBD
+        -- w-pt tfs TBD 
+
+-- running:
+    -- pre-training
+    -- fine-tuning
+        -- learning curves:
+        -- baselines:
+        -- no-pt tfs:
+
+-- notes:
+    -- pre much done porting over sc
+    -- issues:
+        -- test units diff from pb
+            -- DONE tests; does it matter how many cells we avg per pb in test scoring?
+            -- yes; score every test pb with a fixed, larger # of cells
+            -- each pb is already aggregated, usually abotu 1268 cells but smallest is 50 cells
+            -- currently, sc test sample is split evenly across test wells, so each test pb gets about 10 cells
+            -- 50 would be the smallest pb size which is probably fine :D
+        -- model selection unit diff from pb
+            -- DONE tests; does it matter whether we pick best checkpt per cell or per pb?
+            -- no; does not matter - keeping per-cell selection
+        -- hvg not seruat as in pb
+            -- changed to pb hvg
+        -- lvl1 has diff # classes (+2)
+            -- allowed
+        -- no paired boostrap test for the interation
+        -- probe/health check? TESTING erecon and lrecon works fine
+            -- all learn well, except erecon ETF barely learns on cells because sc panels are mostly zeros and single counts (96%)
+            -- TESTING to see if doing hvg pb method but on sc genes fixes that
+                -- 2 methods: seruat v3 on raw counts (field standard) and same method as pseudobulk but on cells (scanpy on lognorm data)
+                -- pb hvg: 92% zeroes
+                -- seruat v3: 92% zeroes
+                -- prev. top-variance: 60% zeroes
+                -- since seruat v3 is the same performance and % zeroes, just keep pb hvg
+    -- setting to decide on:
+        -- batch_size? (pb use 100)
+        -- sweeps/lengths? (same as pb? or need tests to see if learned at pb length)
+
+-- next:
+    -- pretrain
+    -- baselines
+    -- no-pt tfs
+    -- w-pt tfs
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+    -- lvl2 moa 5-fold split to combat plate shortcut
