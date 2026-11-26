@@ -3,6 +3,6 @@ base = "base.toml"
 input = "etf"
 tokens = "panel"
 objective = "mlm"
-lr = 0.012    # TBD: LincsFM config value; the Tahoe pretrain lr grid (pt_mlm_etf) sets it
+lr = 0.036    # Tahoe pretrain lr grid winner (40k; lowest final val loss)
 drop_prob = 0.013 # TBD: LincsFM config value, not tuned on Tahoe
 mask_ratio = 0.15

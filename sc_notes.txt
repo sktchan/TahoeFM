@@ -64,3 +64,98 @@
     -- mlps and logreg w/ same # parameters as tfs
     -- accuracy vs. depth curves for tsc
     -- lvl2 moa 5-fold split to combat plate shortcut
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 25 2026 ###
+
+-- overview:
+    -- pre-training TBD
+    -- fine-tuning 
+        -- trivial baselines TBD
+        -- log/mlp baselines TBD 
+        -- no-pt tfs TBD
+        -- w-pt tfs TBD 
+
+-- running:
+    -- pre-training
+    -- fine-tuning
+        -- learning curves:
+        -- baselines:
+        -- no-pt tfs:
+
+-- notes:
+    -- pre much done porting over sc
+    -- setting to decide on:
+        -- batch_size? (pb use 100)
+            -- TESTING
+        -- sweeps/lengths? (same as pb? or need tests to see if learned at pb length)
+            -- TESTING
+
+-- next:
+    -- pretrain
+    -- baselines
+    -- no-pt tfs
+    -- w-pt tfs
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+    -- lvl2 moa 5-fold split to combat plate shortcut
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 26 2026 ###
+
+-- overview:
+    -- pre-training TBD
+    -- fine-tuning 
+        -- trivial baselines TBD
+        -- log/mlp baselines TBD 
+        -- no-pt tfs TBD
+        -- w-pt tfs TBD 
+
+-- running:
+    -- pre-training
+    -- fine-tuning
+        -- learning curves:
+            -- RUNNING ETF, RTF per cell vs. per pb; ETA friday ish
+                -- checking to see if needs its own rates etc. or same as pb is fine
+        -- baselines:
+        -- no-pt tfs:
+
+-- notes:
+    -- pre much done porting over sc
+    -- setting to decide on:
+        -- batch_size? (pb use 100)
+            -- batch 100 is chill and can fit on MiG! so 1 sweep run would be 5h and a 300k step run is about 36h
+            -- can this be optimized? or no
+            -- maybe can try to prefetch the next pool in the backgroudn while the gpu trains?
+                -- TESTING rn on oni 
+
+-- next:
+    -- pretrain
+    -- baselines
+    -- no-pt tfs
+    -- w-pt tfs
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+    -- lvl2 moa 5-fold split to combat plate shortcut

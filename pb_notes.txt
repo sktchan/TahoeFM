@@ -377,3 +377,50 @@
     -- paired boostrapping
     -- mlps and logreg w/ same # parameters as tfs
     -- lvl2 moa 5-fold split to combat plate shortcut
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 25 2026 ###
+
+-- pb overview:
+    -- pre-training DONE lr grid
+    -- fine-tuning 
+        -- trivial baselines DONE
+        -- log/mlp baselines DONE lvl2, TBD lvl1
+        -- no-pt tfs DONE lvl2, TBD lvl1
+        -- w-pt tfs TBD sweeps
+
+-- running:
+    -- fine-tuning
+        -- baselines:
+            -- TBD lvl1
+        -- no-pt tfs:
+            -- DONE finals; MLP > RTF >>>>> ETF
+        -- w-pt tfs:
+            -- RUNNING sweeps; ETA sat???
+                -- so far, erecon RTF = lrecon RTF > mlm ETF > erecon ETF > lrecon ETF > mlm RTF
+                -- pretrained is worse than scratch for all; but lvl2 mostly solved by plate position
+                -- can settle via MoA probe on fine-tuned models? or just wait for lvl3 tbh
+                -- need to check that plate position can't leak into lvl3 as well tho
+
+-- next:
+    -- lvl1 all (prolly no sweep needed)
+    -- top-k acc
+    -- mlps and logreg w/ same # parameters as tfs
+    -- ETF and RTF swap gene sets (hvg vs top k)
+    -- ETF w/ z scored values???
+
+-- notes:
+    -- 
+
+-- on hold:
+    -- label efficiency curves
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- lvl2 moa 5-fold split to combat plate shortcut
+        -- or moa probe on finetuned models?
+    
