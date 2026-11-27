@@ -423,4 +423,50 @@
     -- paired boostrapping
     -- lvl2 moa 5-fold split to combat plate shortcut
         -- or moa probe on finetuned models?
+
+-----------------------------------------------------------------------------------------------------------
+
+### nov 27 2026 ###
+
+-- pb overview:
+    -- pre-training DONE 
+    -- fine-tuning 
+        -- trivial baselines DONE
+        -- log/mlp baselines DONE lvl2, TBD lvl1
+        -- no-pt tfs DONE lvl2, TBD lvl1
+        -- w-pt tfs RUNNING finals
+
+-- running:
+    -- fine-tuning
+        -- baselines:
+            -- TBD lvl1
+        -- no-pt tfs:
+            -- DONE finals; MLP > RTF >>>>> ETF
+        -- w-pt tfs:
+            -- DONE sweeps; RTF > ETF and lrecon > rest
+            -- RUNNING finals; ETA sun
+                -- could use MoA probe
+
+-- next:
+    -- lvl1 all (prolly no sweep needed)
+    -- ETF and RTF swap gene sets (hvg vs top k)
+    -- top-k acc
+    -- mlps and logreg w/ same # parameters as tfs
+    -- ETF w/ z scored values???
+
+-- notes:
+    -- look @ sc_notes.txt; likely will need to do etf x rtf x hvg x top-k??
+    -- i think acc will need to redo pb as etf top-k instead... of hvg.... (with hvg as not the main comparison)
+
+-- on hold:
+    -- label efficiency curves
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- lvl2 moa 5-fold split to combat plate shortcut
+        -- or moa probe on finetuned models?
+    
     

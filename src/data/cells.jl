@@ -403,7 +403,8 @@ function pb_groups(d::TahoeData, cols::AbstractVector{<:Integer})
     return [d.meta.in_pb[i] ? get!(id, (d.meta.well[i], d.meta.cell_line[i]), length(id) + 1) : 0 for i in cols]
 end
 
-# training batches drawn from every train cell: pools of sc_pool_shards shards per plate, sc_pool_cells cells per pool (uniform, or class-balanced: uniform class of the pool, then a uniform cell of it)
+# training batches drawn from every train cell: pools of sc_pool_shards shards per plate, sc_pool_cells cells per pool (uniform, or class-balanced: uniform class of the pool, then a uniform cell of it);
+# sc_prefetch = n > 0 reads the next n pools in n worker processes while the current one trains (same pools, same order as n = 0)
 mutable struct CellStream
     src::CellSource
     panel::Union{Nothing,Vector{Int}}
@@ -423,7 +424,8 @@ mutable struct CellStream
     cells::Vector{Int}                     # its cells (global ids)
     pos::Int
     pools::Int
-    load_s::Float64
+    load_s::Float64                        # time training waited for pools
+    ahead::Vector{Any}                     # prefetch queue: (worker, future, cells, labels, train cells, shards)
 end
 
 # stream of a single-cell config (nothing for pseudobulks or sc_stream = false: training then uses the in-memory train cells); level = nothing for unlabelled batches
@@ -436,12 +438,15 @@ function cell_stream(d::TahoeData, cfg::AbstractDict; level::Union{Nothing,Abstr
         cls = level == "lvl1" ? Int32[get(id, l, Int32(0)) for l in src.lines] : Int32[get(id, dr, Int32(0)) for dr in src.wmeta.drug]
     end
     rng = MersenneTwister(seed); order = [shuffle(rng, findall(==(p), src.shard_plate)) for p in eachindex(src.plates)]
-    return CellStream(src, tokens == "topk" ? nothing : d.panel, tokens == "topk" ? Int(get(cfg, "top_k", 1024)) : 0, topk_rule(cfg), get(cfg, "rank_shuffle", false) == true,
-                      cls, level == "lvl1", balanced, rng, order, ones(Int, length(order)), Int(cfg["sc_pool_shards"]), Int(cfg["sc_pool_cells"]), nothing, Int[], Int[], 1, 0, 0.0)
+    st = CellStream(src, tokens == "topk" ? nothing : d.panel, tokens == "topk" ? Int(get(cfg, "top_k", 1024)) : 0, topk_rule(cfg), get(cfg, "rank_shuffle", false) == true,
+                    cls, level == "lvl1", balanced, rng, order, ones(Int, length(order)), Int(cfg["sc_pool_shards"]), Int(cfg["sc_pool_cells"]), nothing, Int[], Int[], 1, 0, 0.0, Any[])
+    for w in prefetch_workers(src, Int(get(cfg, "sc_prefetch", 0))); dispatch_pool!(st, w); end   # the first pools start reading now
+    return st
 end
 
-function next_pool!(st::CellStream)
-    t0 = time(); src = st.src; cand = Int[]; lab = Int32[]; ns = 0
+# cells and labels of the next pool (advances the stream's shard order and rng only)
+function plan_pool!(st::CellStream)
+    src = st.src; cand = Int[]; lab = Int32[]; ns = 0
     for p in eachindex(st.order), _ in 1:min(st.per_plate, length(st.order[p]))
         st.at[p] > length(st.order[p]) && (shuffle!(st.rng, st.order[p]); st.at[p] = 1)
         s = st.order[p][st.at[p]]; st.at[p] += 1; ns += 1
@@ -462,14 +467,51 @@ function next_pool!(st::CellStream)
     else
         pick = randperm(st.rng, length(cand))[1:min(st.pool_cells, length(cand))]
     end
-    cells = cand[pick]
-    st.X = nothing; GC.gc()   # free the last pool and the shard buffers before reading the next (peak RSS reached 64 GB without)
-    r = read_cells(src, cells; panel = st.panel, K = st.K, rule = st.rule)
-    st.K > 0 && st.shuf && shuffle_tokens!(r.ids, r.x, r.len, cells)
-    st.X = st.K > 0 ? TopkInput(r.ids, r.x, r.len) : r.X
-    st.y = isnothing(st.cls) ? Int[] : Int.(lab[pick]); st.cells = cells; st.pos = 1; st.pools += 1; st.load_s += time() - t0
-    (st.pools == 1 || st.pools % 10 == 0) && (@printf("cell stream pool %d: %d cells of %d train cells in %d shards%s, %.0f s (%.0f s in all)\n", st.pools, length(cells), length(cand), ns,
-                                                      isnothing(st.cls) ? "" : ", $(length(unique(st.y))) classes", time() - t0, st.load_s); flush(stdout))
+    return cand[pick], (isnothing(st.cls) ? Int[] : Int.(lab[pick])), length(cand), ns
+end
+
+# raw input of a pool (panel matrix or top-k tokens)
+function load_pool(src::CellSource, cells::Vector{Int}, panel, K::Int, rule::String, shuf::Bool)
+    r = read_cells(src, cells; panel, K, rule)
+    K > 0 && shuf && shuffle_tokens!(r.ids, r.x, r.len, cells)
+    return K > 0 ? TopkInput(r.ids, r.x, r.len) : r.X
+end
+
+# prefetch workers: processes kept for the session (no GPU), each holding a copy of the cell source
+const PREFETCH_PIDS = Int[]
+const WORKER_SRC = Ref{Any}(nothing)
+worker_source!(src) = (WORKER_SRC[] = src; GC.gc(); nothing)
+worker_pool(cells, panel, K, rule, shuf) = load_pool(WORKER_SRC[], cells, panel, K, rule, shuf)
+function prefetch_workers(src::CellSource, n::Int)
+    n <= 0 && return Int[]
+    while length(PREFETCH_PIDS) < n
+        p = Distributed.addprocs(1; exeflags = ["--threads=1,0", "--project=$(Base.active_project())"], env = ["CUDA_VISIBLE_DEVICES" => ""])
+        Distributed.remotecall_eval(Main, p, :(using TahoeFM)); append!(PREFETCH_PIDS, p)
+    end
+    pids = PREFETCH_PIDS[1:n]
+    @sync for p in pids; @async Distributed.remotecall_fetch(worker_source!, p, src); end
+    return pids
+end
+
+# plans the next pool and starts reading it on worker w
+function dispatch_pool!(st::CellStream, w::Int)
+    cells, y, nc, ns = plan_pool!(st)
+    push!(st.ahead, (w, Distributed.remotecall(worker_pool, w, cells, st.panel, st.K, st.rule, st.shuf), cells, y, nc, ns))
+end
+
+function next_pool!(st::CellStream)
+    t0 = time(); st.X = nothing; GC.gc()   # free the last pool and the shard buffers before reading the next (peak RSS reached 64 GB without)
+    if isempty(st.ahead)
+        cells, y, nc, ns = plan_pool!(st); X = load_pool(st.src, cells, st.panel, st.K, st.rule, st.shuf)
+    else
+        w, f, cells, y, nc, ns = popfirst!(st.ahead); X = fetch(f)
+        X isa Distributed.RemoteException && throw(X)
+        dispatch_pool!(st, w)   # the worker reads the pool after the queued ones while this one trains
+    end
+    st.X = X; st.y = y; st.cells = cells; st.pos = 1; st.pools += 1; st.load_s += time() - t0
+    (st.pools == 1 || st.pools % 10 == 0) && (@printf("cell stream pool %d: %d cells of %d train cells in %d shards%s, %.0f s (%.0f s waited in all%s)\n", st.pools, length(cells), nc, ns,
+                                                      isnothing(st.cls) ? "" : ", $(length(unique(st.y))) classes", time() - t0, st.load_s,
+                                                      isempty(st.ahead) ? "" : ", $(length(st.ahead)) read ahead"); flush(stdout))
     return st
 end
 

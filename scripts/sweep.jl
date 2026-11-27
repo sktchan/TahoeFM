@@ -30,13 +30,15 @@ isfile(joinpath(TahoeFM.PKG_DIR, config)) || error("no config $config")
 stage == "ft" && !startswith(ftarm, "scratch_") && get!(fixed, "ckpt", "@$(objective)_" * join(ftbase[2:end], '_'))
 
 lr = TahoeFM.read_toml(joinpath(TahoeFM.PKG_DIR, config))["lr"]
-vals = Dict("NAME" => name, "CONFIG" => config, "PROJECT" => project, "LEVEL" => level,
+# single-cell sweeps get an sc_ prefix (wandb name and yaml file), so they do not overwrite the pseudobulk yaml of the same arm
+tag = get(fixed, "dataset", "pb") == "sc" ? "sc_" : ""
+vals = Dict("NAME" => tag * name, "CONFIG" => config, "PROJECT" => project, "LEVEL" => level,
             "MAX_STEPS" => isempty(steps) ? (level == "lvl1" ? "10000" : "40000") : steps, "EVAL_EVERY" => level == "lvl1" ? "1000" : "500",
             "LR_GRID" => @sprintf("[%.3g, %.3g, %.3g]", lr / 3, lr, lr * 3),
             "FIXED" => join(["  $k:\n    value: \"$v\"\n" for (k, v) in sort(collect(fixed))]))
 template = stage == "bl" && occursin("log", arm) ? "bl_log" : stage
 yaml = replace(read(joinpath(TahoeFM.PKG_DIR, "configs", "sweeps", "$template.yaml"), String), ("\${$k}" => v for (k, v) in vals)...)
-out = joinpath(TahoeFM.PKG_DIR, "logs", "sweeps", "$name.yaml")
+out = joinpath(TahoeFM.PKG_DIR, "logs", "sweeps", "$(tag)$name.yaml")
 mkpath(dirname(out)); write(out, yaml)
 println(out)
 dry || cd(() -> run(`wandb sweep $out`), TahoeFM.PKG_DIR)

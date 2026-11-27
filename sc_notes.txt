@@ -113,6 +113,71 @@
 
 -----------------------------------------------------------------------------------------------------------
 
+### nov 27 2026 ###
+
+-- overview:
+    -- pre-training TBD
+    -- fine-tuning 
+        -- trivial baselines TBD
+        -- log/mlp baselines TBD 
+        -- no-pt tfs TBD
+        -- w-pt tfs TBD 
+
+-- running:
+    -- pre-training
+    -- fine-tuning
+        -- learning curves:
+            -- DONE ETF, RTF per cell vs. per pb; ETA friday ish
+                -- checking to see if needs its own rates etc. or same as pb is fine
+                -- ETF kinda sucks tho; checking to see if values, pipeline, or input are messing it up (otherwise can just leave it)
+            -- chosen to 300k steps for finals, 100k steps for sweeps (since at 75% of acc at 100k)
+            -- RUNNING elog, rlog, emlp, rmlp length checks
+        -- baselines:
+            -- TBD 
+        -- no-pt tfs:
+            -- PENDING sweeps; 100k steps, 20 trials
+
+-- notes:
+    -- maybe can try to prefetch the next pool in the backgroudn while the gpu trains?
+        -- DONE rn on oni 
+        -- implemented; reads the next pool of cells in background while gpu trains on current one
+        -- this is pretty standard; its what pytorch DataLoader does
+        -- reduces final by 2hrs, reduces sweep trials by 1h each
+    -- wrt zero masking aka attn mask:
+        -- we do not incl it; ETF reads all 1024 hvg genes incl 0s
+        -- RTF includes no 0s; we pad cells and mask pads
+        -- in scFoundation and scGPT, ETF uses top-k...
+        -- we have 92% zeroes in ETF hvgs because these genes are off in most cells often
+        -- so hvg is acc typical for non transformers, but for transformers then top-k is typical.
+        -- thus we need to run the full 4x4 panel technically of etf x rtf x hvg x top-k
+            -- and also likely baselines on top-k and hvg as well as full gene set?
+        -- although top-k rn is based off of expression / gene_medians
+            -- so not sure if that hinders etf at all since its workign off of rtfs rule
+            -- RUNNING check on sc of raw top-k on etf vs. rtf
+        -- likely need to do etf top-k vs rtf top-k...
+            -- for reference, state and cellFM do raw top-k, gf only does exp/med top-k
+
+-- next:
+    -- pretrain
+    -- baselines
+    -- no-pt tfs
+    -- w-pt tfs
+
+-- on hold:
+    -- label efficiency curves
+    -- top k accuracies
+    -- ablations
+        -- one arm scaled up architecture
+    -- lvl3 tests + ceiling/floor
+    -- T1: honestly not sure if we need
+    -- LDA probe: much later issue
+    -- paired boostrapping
+    -- mlps and logreg w/ same # parameters as tfs
+    -- accuracy vs. depth curves for tsc
+    -- lvl2 moa 5-fold split to combat plate shortcut
+
+-----------------------------------------------------------------------------------------------------------
+
 ### nov 26 2026 ###
 
 -- overview:

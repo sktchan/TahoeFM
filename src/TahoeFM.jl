@@ -3,7 +3,7 @@ module TahoeFM
 # Tahoe-100M pseudobulk and single-cell transformer experiments: expression (ETF) vs rank (RTF) input, pretraining objectives, finetuning, baselines
 
 using CUDA, Flux, Functors, JLD2, LinearAlgebra, NNlib, Optimisers, Printf, Random, Statistics, StatsBase, TOML, Dates
-import PyCall
+import PyCall, Distributed
 
 const PKG_DIR = dirname(@__DIR__)   # thesis/tahoe
 
